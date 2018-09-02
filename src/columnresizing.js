@@ -7,7 +7,7 @@ import {tableNodeTypes} from "./schema"
 
 export const key = new PluginKey("tableColumnResizing")
 
-export function columnResizing({ handleWidth = 5, cellMinWidth = 25, View = TableView, lastColumnResizable = true } = {}) {
+export function columnResizing({ handleWidth = 5, cellMinWidth = 25, gridWidth = 1, View = TableView, lastColumnResizable = true } = {}) {
   let plugin = new Plugin({
     key,
     state: {
@@ -29,7 +29,7 @@ export function columnResizing({ handleWidth = 5, cellMinWidth = 25, View = Tabl
       handleDOMEvents: {
         mousemove(view, event) { handleMouseMove(view, event, handleWidth, cellMinWidth, lastColumnResizable) },
         mouseleave(view) { handleMouseLeave(view) },
-        mousedown(view, event) { handleMouseDown(view, event, cellMinWidth) }
+        mousedown(view, event) { handleMouseDown(view, event, cellMinWidth, gridWidth) }
       },
 
       decorations(state) {
@@ -98,7 +98,7 @@ function handleMouseLeave(view) {
   if (pluginState.activeHandle > -1 && !pluginState.dragging) updateHandle(view, -1)
 }
 
-function handleMouseDown(view, event, cellMinWidth) {
+function handleMouseDown(view, event, cellMinWidth, gridWidth) {
   let pluginState = key.getState(view.state)
   if (pluginState.activeHandle == -1 || pluginState.dragging) return false
 
@@ -111,14 +111,14 @@ function handleMouseDown(view, event, cellMinWidth) {
     window.removeEventListener("mousemove", move)
     let pluginState = key.getState(view.state)
     if (pluginState.dragging) {
-      updateColumnWidth(view, pluginState.activeHandle, draggedWidth(pluginState.dragging, event, cellMinWidth))
+      updateColumnWidth(view, pluginState.activeHandle, draggedWidth(pluginState.dragging, event, cellMinWidth, gridWidth))
       view.dispatch(view.state.tr.setMeta(key, {setDragging: null}))
     }
   }
   function move(event) {
     if (!event.which) return finish(event)
     let pluginState = key.getState(view.state)
-    let dragged = draggedWidth(pluginState.dragging, event, cellMinWidth)
+    let dragged = draggedWidth(pluginState.dragging, event, cellMinWidth, gridWidth)
     displayColumnWidth(view, pluginState.activeHandle, dragged, cellMinWidth)
   }
 
@@ -156,9 +156,9 @@ function edgeCell(view, event, side) {
   return index % map.width == 0 ? -1 : start + map.map[index - 1]
 }
 
-function draggedWidth(dragging, event, cellMinWidth) {
+function draggedWidth(dragging, event, cellMinWidth, gridWidth) {
   let offset = event.clientX - dragging.startX
-  return Math.max(cellMinWidth, dragging.startWidth + offset)
+  return Math.ceil(Math.max(cellMinWidth, dragging.startWidth + offset) / gridWidth) * gridWidth
 }
 
 function updateHandle(view, value) {
