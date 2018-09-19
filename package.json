@@ -46,7 +46,6 @@
     "watch_demo": "rollup -w -c rollup.demo.config.js",
     "build": "rollup -c",
     "watch": "rollup -w -c",
-    "prepare": "npm run build",
     "build_readme": "builddocs --name tables --format markdown --main src/README.md src/*.js > README.md"
   }
 }
