@@ -3,6 +3,7 @@
 import {PluginKey} from "prosemirror-state"
 
 import {TableMap} from "./tablemap"
+import {tableNodeTypes} from "./schema";
 
 export const key = new PluginKey("selectingCells")
 
@@ -13,7 +14,7 @@ export function cellAround($pos) {
 }
 
 export function cellWrapping($pos) {
-  for (let d = $pos.depth - 1; d > 0; d--) {
+  for (let d = $pos.depth; d > 0; d--) { // Sometimes the cell can be in the same depth.
     const role = $pos.node(d).type.spec.tableRole;
     if (role === "cell" || role === 'header_cell') return $pos.node(d)
   }
@@ -80,7 +81,7 @@ export function setAttr(attrs, name, value) {
   return result
 }
 
-export function rmColSpan(attrs, pos, n=1) {
+export function removeColSpan(attrs, pos, n=1) {
   let result = setAttr(attrs, "colspan", attrs.colspan - n)
   if (result.colwidth) {
     result.colwidth = result.colwidth.slice()
@@ -97,4 +98,12 @@ export function addColSpan(attrs, pos, n=1) {
     for (let i = 0; i < n; i++) result.colwidth.splice(pos, 0, 0)
   }
   return result
+}
+
+export function columnIsHeader(map, table, col) {
+  let headerCell = tableNodeTypes(table.type.schema).header_cell
+  for (let row = 0; row < map.height; row++)
+    if (table.nodeAt(map.map[col + row * map.width]).type != headerCell)
+      return false
+  return true
 }

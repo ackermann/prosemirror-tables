@@ -131,8 +131,9 @@ function handleMouseDown(view, event, cellMinWidth, gridWidth) {
 function currentColWidth(view, cellPos, {colspan, colwidth}) {
   let width = colwidth && colwidth[colwidth.length - 1]
   if (width) return width
-  // Not fixed, read current width from DOM
-  let domWidth = view.domAtPos(cellPos + 1).node.offsetWidth, parts = colspan
+  let dom = view.domAtPos(cellPos)
+  let node = dom.node.childNodes[dom.offset]
+  let domWidth = node.offsetWidth, parts = colspan
   if (colwidth) for (let i = 0; i < colspan; i++) if (colwidth[i]) {
     domWidth -= colwidth[i]
     parts--
@@ -147,7 +148,9 @@ function domCellAround(target) {
 }
 
 function edgeCell(view, event, side) {
-  let {pos} = view.posAtCoords({left: event.clientX, top: event.clientY})
+  let found = view.posAtCoords({left: event.clientX, top: event.clientY})
+  if (!found) return -1
+  let {pos} = found
   let $cell = cellAround(view.state.doc.resolve(pos))
   if (!$cell) return -1
   if (side == "right") return $cell.pos
